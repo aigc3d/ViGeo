@@ -1,0 +1,5 @@
+torch>=2.1
+einops>=0.7
+huggingface-hub>=0.23
+numpy>=1.23
+pillow>=9.0
