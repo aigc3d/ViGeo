@@ -1,0 +1,30 @@
+__pycache__/
+*.py[cod]
+.vscode/
+
+# Local datasets, outputs, and evaluation summaries
+benchmark_datasets/
+outputs/
+eval_results_*.csv
+eval_results_*.xlsx
+*.log
+*.out
+*.err
+
+# Model weights and binary artifacts
+*.pth
+*.pt
+*.ckpt
+*.safetensors
+*.bin
+*.npy
+*.npz
+*.zip
+
+# Keep checkpoint directories documented without tracking local weights.
+!depth_benchmarks/checkpoints/
+depth_benchmarks/checkpoints/*
+!depth_benchmarks/checkpoints/README.md
+!normal_benchmarks/checkpoints/
+normal_benchmarks/checkpoints/*
+!normal_benchmarks/checkpoints/README.md
