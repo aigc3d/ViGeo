@@ -59,7 +59,7 @@ class ViGeo(nn.Module):
     @classmethod
     def from_pretrained(
         cls,
-        pretrained_model_name_or_path: str | Path = "pkqbajng/ViGeo",
+        pretrained_model_name_or_path: str | Path,
         filename: str = "vigeo.pt",
         encoder: Literal["vits", "vitb", "vitl", "vitg"] = "vitg",
         **hf_kwargs,

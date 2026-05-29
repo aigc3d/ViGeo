@@ -26,7 +26,10 @@ For full benchmark evaluation, please refer to the [benchmark branch](https://gi
 
 We have fixed several numerical errors in the paper and submitted an updated version to arXiv. Before the update is reflected on arXiv, please refer to assets/paper.pdf for the correct version.
 
-- [ ] Release ViGeo
+- [x] Release ViGeo
+
+  A preliminary ViGeo checkpoint has been released. Please note that the current checkpoint was trained with a known issue in the loss implementation, which may cause minor visualization artifacts in camera poses and distant regions. This checkpoint is consistent with the results reported in the paper and can be used to obtain dense geometry estimation results. We are preparing an updated checkpoint with a sky mask head and will release it soon.
+
 - [ ] Release Hugging Face demo
 - [ ] Update pose benchmarks
 
@@ -73,7 +76,7 @@ from utils import load_image_sequence
 device = torch.device("cuda")
 image_paths = ["path/to/imageA.png", "path/to/imageB.png", "path/to/imageC.png"]
 images = load_image_sequence(image_paths).to(device)  # [T, 3, H, W], RGB in [0, 1]
-model = ViGeo.from_pretrained().to(device).eval()
+model = ViGeo.from_pretrained("pkqbajng/ViGeo").to(device).eval()
 
 with torch.inference_mode():
     output = model.infer(images, mode="offline")
@@ -142,7 +145,7 @@ device = torch.device("cuda")
 image = load_image_sequence(image_paths).to(device)          # [S, 3, H, W]
 sparse_depth = load_depth_sequence(sparse_depth_paths).to(device)  # [S, 1, H, W]
 
-completion_model = videoldcm.from_pretrained("pkqbajng/VideoLDCM").eval().to(device)
+completion_model = videoldcm.from_pretrained("pkqbajng/VideoLDCM").to(device).eval()
 
 with torch.inference_mode():
     output = completion_model.infer(image=image, sparse_depth=sparse_depth)
@@ -181,7 +184,7 @@ intrinsic, focal = load_intrinsic("path/to/intrinsic.npy", H, W)
 intrinsic = intrinsic.to(device)  # [3, 3]
 focal = focal.to(device)          # scalar
 
-completion_model = videoldcm.from_pretrained("pkqbajng/VideoLDCM").eval().to(device)
+completion_model = videoldcm.from_pretrained("pkqbajng/VideoLDCM").to(device).eval()
 
 with torch.inference_mode():
     moge_out = completion_model.moge.infer(
