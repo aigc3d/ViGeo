@@ -343,7 +343,7 @@ def run_pointmap_inference(model, model_name, img_files):
             if pose_enc.ndim == 3:
                 pose_enc = pose_enc.squeeze(0)
 
-            fov_x, fov_y = pose_enc[..., -2], pose_enc[..., -1]
+            fov_y, fov_x = pose_enc[..., -2], pose_enc[..., -1]
             n, h, w = depth_pred.shape
             K_pred = fov_to_intrinsic(fov_x, fov_y, w, h)
             points_pred = depth_to_points(depth_pred, K_pred)
