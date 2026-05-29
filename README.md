@@ -57,12 +57,10 @@ pip install -r requirements_refine.txt
 
 | Model | Download | Description |
 | --- | --- | --- |
-| ViGeo | - | Main visual geometry model for depth, points, normals, poses, and confidence. |
+| ViGeo | [LINK](https://huggingface.co/pkqbajng/ViGeo) | Main visual geometry model for depth, points, normals, poses, and confidence. |
 | VideoLDCM | [LINK](https://huggingface.co/pkqbajng/VideoLDCM) | Data-refinement model for sparse-depth filtering, Poisson completion, and depth refinement. |
 
 ## Quick Start for ViGeo
-
-Set `checkpoint_path` to the ViGeo checkpoint before loading the model.
 
 Inputs are RGB tensors in `[0, 1]` with shape `[T, 3, H, W]` or `[B, T, 3, H, W]`.
 
@@ -75,11 +73,7 @@ from utils import load_image_sequence
 device = torch.device("cuda")
 image_paths = ["path/to/imageA.png", "path/to/imageB.png", "path/to/imageC.png"]
 images = load_image_sequence(image_paths).to(device)  # [T, 3, H, W], RGB in [0, 1]
-checkpoint_path = "path/to/vigeo.pt"
-
-model = ViGeo().to(device).eval()
-state_dict = torch.load(checkpoint_path, map_location="cpu")
-model.load_state_dict(state_dict.get("model", state_dict), strict=True)
+model = ViGeo.from_pretrained().to(device).eval()
 
 with torch.inference_mode():
     output = model.infer(images, mode="offline")

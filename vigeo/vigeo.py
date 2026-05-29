@@ -1,9 +1,12 @@
+from pathlib import Path
+from typing import Literal
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-
-from typing import Literal
 from einops import rearrange
+from huggingface_hub import hf_hub_download
+
 from .conv_head import ConvHead
 from .layers.dinov2 import DINOv2
 from .camera_head import CameraHead
@@ -52,6 +55,38 @@ class ViGeo(nn.Module):
 
         self.register_buffer("image_mean", image_mean)
         self.register_buffer("image_std", image_std)
+
+    @classmethod
+    def from_pretrained(
+        cls,
+        pretrained_model_name_or_path: str | Path = "pkqbajng/ViGeo",
+        filename: str = "vigeo.pt",
+        encoder: Literal["vits", "vitb", "vitl", "vitg"] = "vitg",
+        **hf_kwargs,
+    ) -> "ViGeo":
+        path = Path(pretrained_model_name_or_path)
+        if path.is_dir():
+            checkpoint_path = path / filename
+        elif path.exists():
+            checkpoint_path = path
+        else:
+            checkpoint_path = hf_hub_download(
+                repo_id=str(pretrained_model_name_or_path),
+                filename=filename,
+                repo_type="model",
+                **hf_kwargs,
+            )
+
+        model = cls(encoder=encoder)
+        state_dict = torch.load(checkpoint_path, map_location="cpu", weights_only=True)
+        if isinstance(state_dict, dict):
+            state_dict = state_dict.get("state_dict", state_dict.get("model", state_dict))
+        state_dict = {
+            key: value for key, value in state_dict.items()
+            if not key.startswith("mask_head.")
+        }
+        model.load_state_dict(state_dict, strict=True)
+        return model
 
     def _prepare_rope(self, B, T, H, W, device):
         pos = self.position_getter(B * T, H // self.patch_size, W // self.patch_size, device=device)
