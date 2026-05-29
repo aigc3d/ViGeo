@@ -11,7 +11,7 @@
     </p>
     <p>
         <a href="https://pkqbajng.github.io/ViGeo/" style="text-decoration: none; margin: 0 8px;"><img src="https://img.shields.io/badge/Homepage-ViGeo-blue?style=flat" alt="Homepage"></a>
-        <a href="" style="text-decoration: none; margin: 0 8px;"><img src="https://img.shields.io/badge/Paper-arXiv-red?style=flat&logo=arxiv" alt="arXiv"></a>
+        <a href="https://arxiv.org/abs/2605.30060" style="text-decoration: none; margin: 0 8px;"><img src="https://img.shields.io/badge/Paper-arXiv-red?style=flat&logo=arxiv" alt="arXiv"></a>
         <a href="" style="text-decoration: none; margin: 0 8px;"><img src="https://img.shields.io/badge/Model-HuggingFace-yellow?style=flat&logo=huggingface" alt="Model"></a>
 </div>
 
@@ -21,6 +21,14 @@ ViGeo supports both `offline` and `online` inference. Use `offline` when the ful
 
 For training, please refer to the [train branch](https://github.com/aigc3d/ViGeo/tree/train).
 For full benchmark evaluation, please refer to the [benchmark branch](https://github.com/aigc3d/ViGeo/tree/benchmark).
+
+## To Do List
+
+We have fixed several numerical errors in the paper and submitted an updated version to arXiv. Before the update is reflected on arXiv, please refer to assets/paper.pdf for the correct version.
+
+- [ ] Release ViGeo
+- [ ] Release Hugging Face demo
+- [ ] Update pose benchmarks
 
 ## Installation
 
@@ -51,12 +59,6 @@ pip install -r requirements_refine.txt
 | --- | --- | --- |
 | ViGeo | - | Main visual geometry model for depth, points, normals, poses, and confidence. |
 | VideoLDCM | [LINK](https://huggingface.co/pkqbajng/VideoLDCM) | Data-refinement model for sparse-depth filtering, Poisson completion, and depth refinement. |
-
-## Roadmap
-
-- [ ] Release ViGeo
-- [ ] Release Hugging Face demo
-- [ ] Update pose benchmarks
 
 ## Quick Start for ViGeo
 
@@ -234,3 +236,13 @@ with torch.inference_mode():
 ViGeo is licensed under the Apache License, Version 2.0. See `LICENSE` for details.
 
 ## Bibtex
+```bibtex
+@article{yu2026vigeo,
+  title={Towards Consistent Video Geometry Estimation},
+  author={Yu, Zhu and Gao, Jingnan and Zhang, Runmin and Qiu, Lingteng and Zhao, Zhengyi and Peng, Rui
+          and Yan, Yichao and Qiu, Kejie and Zhu, Siyu and Dong, Zilong and Cao, Si-Yuan and Shen, Hui-Liang},
+  journal={arXiv:2605.30060},
+  year={2026}
+}
+```
+
