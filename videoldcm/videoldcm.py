@@ -47,6 +47,16 @@ MOGE_VITS_CONFIG = {
         "res_block_hidden_norm": "none",
         "resamplers": ["conv_transpose", "conv_transpose", "conv_transpose", "bilinear"],
     },
+    "normal_head": 
+    {
+        "dim_in": [384, 256, 128, 64, 32],
+        "dim_out": [None, None, None, None, 3],
+        "dim_res_blocks": [384, 256, 128, 64, 32],
+        "num_res_blocks": [0, 1, 1, 1, 0],
+        "res_block_in_norm": "none",
+        "res_block_hidden_norm": "none",
+        "resamplers": ["conv_transpose", "conv_transpose", "conv_transpose", "bilinear"],
+    },
     "scale_head": {"dims": [384, 384, 384, 1]},
     "remap_output": "exp",
     "num_tokens_range": [1200, 3600],
