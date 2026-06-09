@@ -119,10 +119,6 @@ class videoldcm(nn.Module):
         state_dict = torch.load(checkpoint_path, map_location="cpu", weights_only=True)
         if isinstance(state_dict, dict):
             state_dict = state_dict.get("state_dict", state_dict.get("model", state_dict))
-        state_dict = {
-            key: value for key, value in state_dict.items()
-            if not key.startswith("moge.normal_head.")
-        }
         model.load_state_dict(state_dict, strict=True)
         return model
 
