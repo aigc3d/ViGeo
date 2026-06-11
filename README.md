@@ -12,7 +12,8 @@
     <p>
         <a href="https://pkqbajng.github.io/ViGeo/" style="text-decoration: none; margin: 0 8px;"><img src="https://img.shields.io/badge/Homepage-ViGeo-blue?style=flat" alt="Homepage"></a>
         <a href="https://arxiv.org/abs/2605.30060" style="text-decoration: none; margin: 0 8px;"><img src="https://img.shields.io/badge/Paper-arXiv-red?style=flat&logo=arxiv" alt="arXiv"></a>
-        <a href="" style="text-decoration: none; margin: 0 8px;"><img src="https://img.shields.io/badge/Model-HuggingFace-yellow?style=flat&logo=huggingface" alt="Model"></a>
+        <a href="https://huggingface.co/pkqbajng/ViGeo" style="text-decoration: none; margin: 0 8px;"><img src="https://img.shields.io/badge/Model-HuggingFace-yellow?style=flat&logo=huggingface" alt="Model"></a>
+        <a href="https://www.modelscope.cn/models/RunminZhang/ViGeo" style="text-decoration: none; margin: 0 8px;"><img src="https://img.shields.io/badge/Model-ModelScope-blueviolet?style=flat&logo=modelscope" alt="ModelScope"></a>
 </div>
 
 ViGeo estimates scene geometry from either video clips or single-frame inputs, including depth, 3D points, normals, confidence, and camera poses for sequences. VideoLDCM supports depth completion for both videos and single images; in our paper, it is used as the data-refinement model to turn sparse or noisy depth observations into cleaner dense depth supervision.
@@ -59,9 +60,9 @@ pip install -r requirements_refine.txt
 ## Pretrained Models
 
 | Model | Download | Description |
-| --- | --- | --- |
-| ViGeo | [LINK](https://huggingface.co/pkqbajng/ViGeo) | Main visual geometry model for depth, points, normals, poses, and confidence. |
-| VideoLDCM | [LINK](https://huggingface.co/pkqbajng/VideoLDCM) | Data-refinement model for sparse-depth filtering, Poisson completion, and depth refinement. |
+| :---: | :---: | --- |
+| ViGeo | [HuggingFace](https://huggingface.co/pkqbajng/ViGeo)<br>[ModelScope](https://www.modelscope.cn/models/RunminZhang/ViGeo) | Main visual geometry model for depth, points, normals, poses, and confidence. |
+| VideoLDCM | [HuggingFace](https://huggingface.co/pkqbajng/VideoLDCM)<br>[ModelScope](https://www.modelscope.cn/models/RunminZhang/VideoLDCM) | Data-refinement model for sparse-depth filtering, Poisson completion, and depth refinement. |
 
 ## Quick Start for ViGeo
 
