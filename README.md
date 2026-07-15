@@ -32,7 +32,8 @@ We have fixed several numerical errors in the paper and submitted an updated ver
   A preliminary ViGeo checkpoint has been released. Please note that the current checkpoint was trained with a known issue in the loss implementation, which may cause minor visualization artifacts in camera poses and distant regions. This checkpoint is consistent with the results reported in the paper and can be used to obtain dense geometry estimation results. We are preparing an updated checkpoint with a sky mask head and will release it soon.
 
 - [ ] Release Hugging Face demo
-- [ ] Update pose benchmarks
+- [x] Update pose benchmarks
+- [ ] Update ViPE code with VideoLDCM
 
 ## Installation
 
@@ -243,4 +244,3 @@ ViGeo is licensed under the Apache License, Version 2.0. See `LICENSE` for detai
   year={2026}
 }
 ```
-
