@@ -5,6 +5,7 @@ __pycache__/
 # Local datasets, outputs, and evaluation summaries
 benchmark_datasets/
 outputs/
+recon_benchmark/results/
 eval_results_*.csv
 eval_results_*.xlsx
 *.log

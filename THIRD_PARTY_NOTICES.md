@@ -15,6 +15,8 @@ This notice summarizes license information for third-party code and baseline mod
 | VGGT [<a href="https://github.com/facebookresearch/vggt">GitHub</a>] [<a href="https://huggingface.co/facebook/VGGT-1B">HF</a>] | `depth_benchmarks/vggt` | VGGT License v1 |
 | VGGT-Omega [<a href="https://github.com/facebookresearch/vggt-omega">GitHub</a>] [<a href="https://huggingface.co/facebook/VGGT-Omega">HF</a>] | `depth_benchmarks/vggt_omega` | FAIR Noncommercial Research License |
 | StreamVGGT [<a href="https://github.com/wzzheng/StreamVGGT">GitHub</a>] [<a href="https://huggingface.co/lch01/StreamVGGT">HF</a>] | `depth_benchmarks/streamvggt` | CC BY-NC-SA 4.0 |
+| Spann3R [<a href="https://github.com/HengyiWang/spann3r">GitHub</a>] | Reconstruction dataset layout reference | CC BY-NC-SA 4.0 |
+| SimpleRecon [<a href="https://github.com/nianticlabs/simplerecon">GitHub</a>] | 7-Scenes RGB-depth reprojection reference | Apache-2.0 |
 | STream3R [<a href="https://github.com/NIRVANALAN/STream3R">GitHub</a>] [<a href="https://huggingface.co/yslan/STream3R">HF</a>] | `depth_benchmarks/stream3r` | NTU S-Lab License 1.0 |
 | MoGe [<a href="https://github.com/microsoft/MoGe">GitHub</a>] [<a href="https://huggingface.co/Ruicheng/moge-vitl">HF</a>] | `depth_benchmarks/moge` | MIT; includes DINOv2 Apache-2.0 code |
 | GeometryCrafter [<a href="https://github.com/TencentARC/GeometryCrafter">GitHub</a>] [<a href="https://huggingface.co/TencentARC/GeometryCrafter">HF</a>] | `depth_benchmarks/geometrycrafter` | Tencent research-only license; uses Stable Video Diffusion components |
@@ -23,3 +25,4 @@ This notice summarizes license information for third-party code and baseline mod
 | NormalCrafter [<a href="https://github.com/Binyr/NormalCrafter">GitHub</a>] [<a href="https://huggingface.co/Yanrui95/NormalCrafter">HF</a>] | `normal_benchmarks/normalcrafter` | Code MIT; HF model Apache-2.0 |
 | StableNormal [<a href="https://github.com/Stable-X/StableNormal">GitHub</a>] [<a href="https://huggingface.co/Stable-X/stable-normal-v0-1">HF</a>] | `normal_benchmarks/stablenormal` | Apache-2.0 |
 | Lotus [<a href="https://github.com/EnVision-Research/Lotus">GitHub</a>] [<a href="https://huggingface.co/jingheya/lotus-normal-d-v1-1">HF</a>] | `normal_benchmarks/lotus` plus `jingheya/lotus-normal-d-v1-1` | Apache-2.0 |
+| Open3D [<a href="https://github.com/isl-org/Open3D">GitHub</a>] | Reconstruction ICP, point-cloud I/O, and normal estimation | MIT |

@@ -5,18 +5,18 @@ ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT_DIR"
 
 DATA_ROOT=""
-CHECKPOINT_PATH=""
+CHECKPOINT_PATH="vigeo.pt"
 CHUNK_SIZE="16"
-USE_FP16="1"
+TASKS=(depth normal pose reconstruction)
 
 while [[ $# -gt 0 ]]; do
     case "$1" in
-        --data-root)
+        --data-root|--data_root)
             [[ $# -ge 2 ]] || { echo "Missing value for --data-root" >&2; exit 2; }
             DATA_ROOT="$2"
             shift 2
             ;;
-        --checkpoint-path)
+        --checkpoint|--checkpoint-path|--checkpoint_path)
             [[ $# -ge 2 ]] || { echo "Missing value for --checkpoint-path" >&2; exit 2; }
             CHECKPOINT_PATH="$2"
             shift 2
@@ -26,13 +26,13 @@ while [[ $# -gt 0 ]]; do
             CHUNK_SIZE="$2"
             shift 2
             ;;
-        --use-fp16)
-            USE_FP16="1"
+        --tasks)
             shift
-            ;;
-        --no-fp16)
-            USE_FP16="0"
-            shift
+            TASKS=()
+            while [[ $# -gt 0 && "$1" != --* ]]; do
+                TASKS+=("$1")
+                shift
+            done
             ;;
         *)
             echo "Unknown argument: $1" >&2
@@ -43,6 +43,11 @@ done
 
 if [[ -z "$CHECKPOINT_PATH" ]]; then
     echo "Missing required argument: --checkpoint-path" >&2
+    exit 2
+fi
+
+if [[ ! -f "$CHECKPOINT_PATH" ]]; then
+    echo "Checkpoint does not exist: $CHECKPOINT_PATH" >&2
     exit 2
 fi
 
@@ -64,16 +69,22 @@ COMMON_ARGS=(
     --chunk_size "$CHUNK_SIZE"
 )
 
-if [[ "$USE_FP16" == "1" || "$USE_FP16" == "true" ]]; then
-    COMMON_ARGS+=(--use_fp16)
-fi
-
 STANDARD_DEPTH_DATASETS=(sintel bonn kitti)
 LONG_DEPTH_DATASETS=(bonn_400 kitti_300 hammer)
 NORMAL_DATASETS=(hammer sintel nyuv2)
+POSE_DATASETS=(sintel)
 FAILURES=()
 
-run_vigeo_eval() {
+task_enabled() {
+    local target="$1"
+    local task
+    for task in "${TASKS[@]}"; do
+        [[ "$task" == "$target" ]] && return 0
+    done
+    return 1
+}
+
+run_geometry_eval() {
     local task="$1"
     local mode="$2"
     local align_method="$3"
@@ -89,14 +100,51 @@ run_vigeo_eval() {
     fi
 }
 
-for mode in offline online; do
-    run_vigeo_eval video_depth "$mode" scale "${STANDARD_DEPTH_DATASETS[@]}"
-    run_vigeo_eval pointmap "$mode" scale "${STANDARD_DEPTH_DATASETS[@]}"
-done
+run_pose_eval() {
+    local mode="$1"
+    if ! python eval.py \
+        --task pose_estimation \
+        --mode "$mode" \
+        "${COMMON_ARGS[@]}" \
+        --datasets "${POSE_DATASETS[@]}"; then
+        FAILURES+=("pose_estimation/$mode")
+    fi
+}
 
-run_vigeo_eval mono_depth offline affine "${STANDARD_DEPTH_DATASETS[@]}"
-run_vigeo_eval normal offline scale "${NORMAL_DATASETS[@]}"
-run_vigeo_eval video_depth chunk scale "${LONG_DEPTH_DATASETS[@]}"
+run_reconstruction_eval() {
+    local mode="$1"
+    if ! python eval.py \
+        --task reconstruction \
+        --mode "$mode" \
+        "${COMMON_ARGS[@]}"; then
+        FAILURES+=("reconstruction/$mode")
+    fi
+}
+
+if task_enabled depth; then
+    for mode in offline online; do
+        run_geometry_eval video_depth "$mode" scale "${STANDARD_DEPTH_DATASETS[@]}"
+        run_geometry_eval pointmap "$mode" scale "${STANDARD_DEPTH_DATASETS[@]}"
+    done
+    run_geometry_eval mono_depth offline affine "${STANDARD_DEPTH_DATASETS[@]}"
+    run_geometry_eval video_depth chunk scale "${LONG_DEPTH_DATASETS[@]}"
+fi
+
+if task_enabled normal; then
+    run_geometry_eval normal offline scale "${NORMAL_DATASETS[@]}"
+fi
+
+if task_enabled pose; then
+    for mode in offline online; do
+        run_pose_eval "$mode"
+    done
+fi
+
+if task_enabled reconstruction; then
+    for mode in offline online chunk; do
+        run_reconstruction_eval "$mode"
+    done
+fi
 
 if [[ ${#FAILURES[@]} -gt 0 ]]; then
     echo "Failed evaluations:" >&2

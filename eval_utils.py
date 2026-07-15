@@ -3,7 +3,7 @@ import math
 from pathlib import Path
 
 
-ID_COLUMNS = {'task', 'dataset', 'benchmark'}
+ID_COLUMNS = {'task', 'dataset', 'benchmark', 'num_sequences', 'num_failed', 'num_scenes'}
 
 
 def make_summary_row(task, dataset, benchmark, metrics, columns):
