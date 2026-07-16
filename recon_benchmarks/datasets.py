@@ -201,10 +201,18 @@ def _read_nrgbd_poses(path: Path) -> np.ndarray:
     return np.stack(poses)
 
 
-def _load_seven_scenes_raw(root: Path, scene_id: str, stride: int):
+def _load_seven_scenes_raw(
+    root: Path,
+    scene_id: str,
+    stride: int,
+    max_frames: int | None = None,
+    project_missing_depth: bool = False,
+):
     scene_dir = root / scene_id
     all_image_paths = sorted(scene_dir.glob("frame-*.color.png"), key=_numeric_key)
     frame_ids = list(range(0, len(all_image_paths), stride))
+    if max_frames is not None:
+        frame_ids = frame_ids[:max_frames]
     if not frame_ids:
         raise RuntimeError(f"No 7-Scenes RGB frames found under {scene_dir}")
     records = []
@@ -215,20 +223,31 @@ def _load_seven_scenes_raw(root: Path, scene_id: str, stride: int):
         depth_path = scene_dir / f"{prefix}.depth.proj.png"
         pose_path = scene_dir / f"{prefix}.pose.txt"
         if not depth_path.exists():
-            raise FileNotFoundError(
-                f"Missing projected depth {depth_path}. Run preprocess/prepare_reconstruction_datasets.py first."
-            )
-        depth = cv2.imread(str(depth_path), cv2.IMREAD_UNCHANGED)
+            if not project_missing_depth:
+                raise FileNotFoundError(
+                    f"Missing projected depth {depth_path}. Run preprocess/prepare_reconstruction_datasets.py first."
+                )
+            from preprocess.prepare_reconstruction_datasets import project_depth_to_rgb
+
+            raw_path = scene_dir / f"{prefix}.depth.png"
+            raw_depth = cv2.imread(str(raw_path), cv2.IMREAD_UNCHANGED)
+            if raw_depth is None:
+                raise FileNotFoundError(f"Missing raw 7-Scenes depth: {raw_path}")
+            depth = project_depth_to_rgb(raw_depth)
+        else:
+            depth = cv2.imread(str(depth_path), cv2.IMREAD_UNCHANGED)
         depth = np.nan_to_num(depth.astype(np.float32), nan=0.0) / 1000.0
         depth[(depth > 10.0) | (depth < 1e-3)] = 0.0
         records.append((image_path, _read_rgb(image_path), depth, intrinsics.copy(), np.loadtxt(pose_path).astype(np.float32)))
     return records
 
 
-def _load_nrgbd_raw(root: Path, scene_id: str, stride: int):
+def _load_nrgbd_raw(root: Path, scene_id: str, stride: int, max_frames: int | None = None):
     scene_dir = root / scene_id
     image_paths = sorted((scene_dir / "images").glob("img*.png"), key=_numeric_key)
     frame_ids = list(range(0, len(image_paths), stride))
+    if max_frames is not None:
+        frame_ids = frame_ids[:max_frames]
     if not frame_ids:
         raise RuntimeError(f"No NRGBD RGB frames found under {scene_dir / 'images'}")
     poses = _read_nrgbd_poses(scene_dir / "poses.txt")
@@ -255,15 +274,23 @@ def load_scene(
     scene_id: str,
     resolution: tuple[int, int] = (518, 392),
     stride: int | None = None,
+    max_frames: int | None = None,
+    project_missing_depth: bool = False,
 ) -> ReconstructionScene:
     dataset = dataset.lower()
     base_dataset = canonical_dataset(dataset)
     root = Path(data_root) / DATASET_DIRS[base_dataset]
     stride = stride or default_stride_for_dataset(dataset)
     if base_dataset == "7scenes":
-        records = _load_seven_scenes_raw(root, scene_id, stride)
+        records = _load_seven_scenes_raw(
+            root,
+            scene_id,
+            stride,
+            max_frames=max_frames,
+            project_missing_depth=project_missing_depth,
+        )
     elif base_dataset == "nrgbd":
-        records = _load_nrgbd_raw(root, scene_id, stride)
+        records = _load_nrgbd_raw(root, scene_id, stride, max_frames=max_frames)
     else:
         raise ValueError(f"Unsupported reconstruction dataset: {dataset}")
 

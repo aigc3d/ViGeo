@@ -109,7 +109,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--model",
         required=True,
-        choices=("pi3", "vggt", "da3", "streamvggt", "stream3r"),
+        choices=("pi3", "vggt", "da3", "streamvggt", "stream3r", "infinitevggt"),
     )
     parser.add_argument("--mode", default=None, help=argparse.SUPPRESS)
     parser.add_argument("--checkpoint", "--checkpoint-path", "--checkpoint_path", dest="checkpoint", default=None)

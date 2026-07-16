@@ -17,20 +17,19 @@ All scripts should be launched from the repository root. Summary CSV files are w
 - Surface normal estimation
 - Camera pose estimation
 - Scene-level 3D reconstruction
+- Long-sequence 3D reconstruction
 
 ## Data Preparation
 
 Put all benchmark data under one root directory, for example `benchmark_datasets/`, or pass another path with `--data-root`.
 
-Download the ViGeo depth, point-map, normal, and Sintel pose benchmark data:
+The processed benchmark datasets can be downloaded from Hugging Face:
 
-- [bonn.zip](https://virutalbuy-public.oss-cn-hangzhou.aliyuncs.com/share/ViGeo_Benchmark/bonn.zip)
-- [hammer.zip](https://virutalbuy-public.oss-cn-hangzhou.aliyuncs.com/share/ViGeo_Benchmark/hammer.zip)
-- [kitti.zip](https://virutalbuy-public.oss-cn-hangzhou.aliyuncs.com/share/ViGeo_Benchmark/kitti.zip)
-- [nyuv2.zip](https://virutalbuy-public.oss-cn-hangzhou.aliyuncs.com/share/ViGeo_Benchmark/nyuv2.zip)
-- [sintel.zip](https://virutalbuy-public.oss-cn-hangzhou.aliyuncs.com/share/ViGeo_Benchmark/sintel.zip)
+- [pkqbajng/benchmark_datasets](https://huggingface.co/datasets/pkqbajng/benchmark_datasets)
 
-Prepare 7-Scenes and Neural RGBD for 3D reconstruction:
+Download the archives from `zip_files/` and extract them under `benchmark_datasets/` so that the layout below is produced.
+
+If preparing 7-Scenes and Neural RGBD from the original raw releases, run:
 
 ```bash
 python preprocess/prepare_reconstruction_datasets.py --data-root benchmark_datasets --download --extract
@@ -100,6 +99,13 @@ Default ViGeo datasets:
 - Normal: Sintel, NYUv2, Hammer
 - Pose: Sintel
 - Reconstruction: 7-Scenes, Neural RGBD
+- Long reconstruction: 7-Scenes and Neural RGBD with 300, 400, and 500 input frames
+
+Run only the long-sequence reconstruction setting:
+
+```bash
+bash scripts/eval_vigeo.sh --data-root benchmark_datasets --checkpoint-path vigeo.pt --tasks reconstruction_long
+```
 
 ## Baseline Evaluation
 

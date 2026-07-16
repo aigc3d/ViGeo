@@ -302,7 +302,7 @@ def evaluate_pose_estimation(args, model, device):
             summary_metrics["num_failed"] = failed
             print_summary(dataset, {key: summary_metrics[key] for key in POSE_METRICS})
             row = make_summary_row(args.task, dataset, make_benchmark_name(args), summary_metrics, SUMMARY_COLUMNS)
-            write_summary_table(OUTPUT_DIR, "eval_results_vigeo_summary", SUMMARY_COLUMNS, [row])
+            write_summary_table(args.output_dir, args.output_prefix, SUMMARY_COLUMNS, [row])
             rows_written += 1
 
     if rows_written == 0:
@@ -321,49 +321,76 @@ def evaluate_reconstruction_task(args, model, device):
             print(f"[SKIP] No reconstruction scenes found for {dataset}.")
             continue
 
-        val_metrics = defaultdict(list)
         stride = default_reconstruction_stride(dataset)
         if dataset.startswith("7scenes"):
             stride = args.seven_scenes_stride
         elif dataset.startswith("nrgbd"):
             stride = args.nrgbd_stride
 
-        for scene_id in tqdm(scenes, desc=dataset):
-            if torch.cuda.is_available():
-                torch.cuda.empty_cache()
+        input_lengths = args.recon_input_lengths or [None]
+        for input_length in input_lengths:
+            val_metrics = defaultdict(list)
+            row_dataset = f"{dataset}_{input_length}" if input_length is not None else dataset
+            progress_name = row_dataset
 
-            scene = load_reconstruction_scene(
-                args.data_root,
-                dataset,
-                scene_id,
-                resolution=(args.recon_width, args.recon_height),
-                stride=stride,
-            )
-            pred_points = run_reconstruction_inference(model, args, scene.images)
-            metrics = evaluate_reconstruction(
-                pred_points,
-                scene.points_gt,
-                scene.valid_masks,
-                colors=scene.images.permute(0, 2, 3, 1),
-                icp_threshold=args.icp_threshold,
-                crop_size=args.crop_size,
-            ).as_dict()
+            for scene_id in tqdm(scenes, desc=progress_name):
+                if torch.cuda.is_available():
+                    torch.cuda.empty_cache()
 
-            if not has_valid_metrics(metrics, "acc_mean"):
-                tqdm.write(f"[{dataset.upper()} - {scene_id}] No valid reconstruction metrics found.")
-                continue
+                scene = load_reconstruction_scene(
+                    args.data_root,
+                    dataset,
+                    scene_id,
+                    resolution=(args.recon_width, args.recon_height),
+                    stride=stride,
+                    max_frames=input_length,
+                    project_missing_depth=input_length is not None,
+                )
+                if (
+                    input_length is not None
+                    and len(scene.image_paths) < input_length
+                    and not args.allow_short_reconstruction_scenes
+                ):
+                    tqdm.write(
+                        f"[SKIP] {dataset.upper()} - {scene_id}: only {len(scene.image_paths)} frames "
+                        f"after stride={stride}, requested {input_length}."
+                    )
+                    continue
 
-            tqdm.write(f"[{dataset.upper()} - {scene_id}] {format_metrics({k: metrics[k] for k in RECONSTRUCTION_METRICS})}")
-            for key in RECONSTRUCTION_METRICS:
-                val_metrics[key].append(float(metrics[key]))
+                pred_points = run_reconstruction_inference(model, args, scene.images)
+                max_metric_points = (
+                    args.long_recon_max_metric_points
+                    if input_length is not None
+                    else args.recon_max_metric_points
+                )
+                metrics = evaluate_reconstruction(
+                    pred_points,
+                    scene.points_gt,
+                    scene.valid_masks,
+                    colors=scene.images.permute(0, 2, 3, 1),
+                    icp_threshold=args.icp_threshold,
+                    crop_size=args.crop_size,
+                    max_metric_points=max_metric_points,
+                ).as_dict()
 
-        if val_metrics:
-            summary_metrics = {key: float(np.mean(values)) for key, values in val_metrics.items()}
-            summary_metrics["num_scenes"] = len(next(iter(val_metrics.values())))
-            print_summary(dataset, {key: summary_metrics[key] for key in RECONSTRUCTION_METRICS})
-            row = make_summary_row(args.task, dataset, make_benchmark_name(args), summary_metrics, SUMMARY_COLUMNS)
-            write_summary_table(OUTPUT_DIR, "eval_results_vigeo_summary", SUMMARY_COLUMNS, [row])
-            rows_written += 1
+                if not has_valid_metrics(metrics, "acc_mean"):
+                    tqdm.write(f"[{row_dataset.upper()} - {scene_id}] No valid reconstruction metrics found.")
+                    continue
+
+                tqdm.write(
+                    f"[{row_dataset.upper()} - {scene_id}] "
+                    f"{format_metrics({k: metrics[k] for k in RECONSTRUCTION_METRICS})}"
+                )
+                for key in RECONSTRUCTION_METRICS:
+                    val_metrics[key].append(float(metrics[key]))
+
+            if val_metrics:
+                summary_metrics = {key: float(np.mean(values)) for key, values in val_metrics.items()}
+                summary_metrics["num_scenes"] = len(next(iter(val_metrics.values())))
+                print_summary(row_dataset, {key: summary_metrics[key] for key in RECONSTRUCTION_METRICS})
+                row = make_summary_row(args.task, row_dataset, make_benchmark_name(args), summary_metrics, SUMMARY_COLUMNS)
+                write_summary_table(args.output_dir, args.output_prefix, SUMMARY_COLUMNS, [row])
+                rows_written += 1
 
     if rows_written == 0:
         raise RuntimeError("No ViGeo reconstruction summary rows were produced; no CSV data was written.")
@@ -421,7 +448,7 @@ def evaluate(args):
             summary_metrics = {key: float(np.mean(values)) for key, values in val_metrics.items()}
             print_summary(dataset, summary_metrics)
             row = make_summary_row(args.task, dataset, make_benchmark_name(args), summary_metrics, SUMMARY_COLUMNS)
-            write_summary_table(OUTPUT_DIR, "eval_results_vigeo_summary", SUMMARY_COLUMNS, [row])
+            write_summary_table(args.output_dir, args.output_prefix, SUMMARY_COLUMNS, [row])
             rows_written += 1
 
     if rows_written == 0:
@@ -464,9 +491,15 @@ def parse_args():
     parser.add_argument('--recon_height', type=int, default=392)
     parser.add_argument('--crop_size', type=int, default=224)
     parser.add_argument('--icp_threshold', type=float, default=0.1)
+    parser.add_argument('--recon_max_metric_points', '--recon-max-metric-points', dest='recon_max_metric_points', type=int, default=0)
+    parser.add_argument('--long_recon_max_metric_points', '--long-recon-max-metric-points', dest='long_recon_max_metric_points', type=int, default=500000)
     parser.add_argument('--seven_scenes_stride', type=int, default=200)
     parser.add_argument('--nrgbd_stride', type=int, default=500)
+    parser.add_argument('--recon_input_lengths', '--recon-input-lengths', dest='recon_input_lengths', nargs='+', type=int, default=None)
+    parser.add_argument('--allow_short_reconstruction_scenes', '--allow-short-reconstruction-scenes', action='store_true')
     parser.add_argument('--limit_scenes', type=int, default=None)
+    parser.add_argument('--output_dir', '--output-dir', dest='output_dir', type=str, default=str(OUTPUT_DIR))
+    parser.add_argument('--output_prefix', '--output-prefix', dest='output_prefix', type=str, default='eval_results_vigeo_summary')
     args = parser.parse_args()
     validate_args(args)
     return args

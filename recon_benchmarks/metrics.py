@@ -103,6 +103,43 @@ def center_crop_tensor(tensor: torch.Tensor, crop_size: int = 224) -> torch.Tens
     return tensor[..., top : top + crop_size, left : left + crop_size]
 
 
+def sample_reconstruction_tensors(
+    points_pred: torch.Tensor,
+    points_gt: torch.Tensor,
+    valid_masks: torch.Tensor,
+    colors: torch.Tensor | None = None,
+    max_points: int = 0,
+) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor | None]:
+    """Deterministically downsample valid reconstruction points for expensive metrics."""
+    if max_points <= 0:
+        return points_pred, points_gt, valid_masks, colors
+
+    valid_indices = valid_masks.reshape(-1).bool().nonzero(as_tuple=False).squeeze(1)
+    if valid_indices.numel() <= max_points:
+        return points_pred, points_gt, valid_masks, colors
+
+    sample_positions = torch.linspace(
+        0,
+        valid_indices.numel() - 1,
+        steps=max_points,
+        device=valid_indices.device,
+    ).long()
+    sample_indices = valid_indices[sample_positions]
+
+    def _select_vectors(tensor: torch.Tensor) -> torch.Tensor:
+        selected = tensor.reshape(-1, tensor.shape[-1])[sample_indices]
+        return selected.reshape(-1, 1, 1, tensor.shape[-1]).contiguous()
+
+    sampled_masks = torch.ones((max_points, 1, 1), dtype=torch.bool, device=valid_masks.device)
+    sampled_colors = None if colors is None else _select_vectors(colors)
+    return (
+        _select_vectors(points_pred),
+        _select_vectors(points_gt),
+        sampled_masks,
+        sampled_colors,
+    )
+
+
 def _nearest_metrics(
     query_points: np.ndarray,
     reference_points: np.ndarray,
@@ -127,6 +164,7 @@ def evaluate_reconstruction(
     colors: torch.Tensor | None = None,
     icp_threshold: float = 0.1,
     crop_size: int = 224,
+    max_metric_points: int = 0,
     output_dir: str | Path | None = None,
     scene_name: str | None = None,
 ) -> ReconstructionMetrics:
@@ -135,6 +173,13 @@ def evaluate_reconstruction(
     except ImportError as exc:
         raise RuntimeError("open3d is required for ICP and normal-consistency reconstruction metrics.") from exc
 
+    points_pred, points_gt, valid_masks, colors = sample_reconstruction_tensors(
+        points_pred,
+        points_gt,
+        valid_masks,
+        colors,
+        max_points=max_metric_points,
+    )
     points_pred, points_gt = umeyama_align_points(points_pred, points_gt, valid_masks)
     masks = valid_masks.bool()
 

@@ -21,7 +21,7 @@ from recon_benchmarks.datasets import ReconstructionScene  # noqa: E402
 
 
 OFFLINE_MODELS = ("pi3", "vggt", "da3")
-ONLINE_MODELS = ("streamvggt", "stream3r")
+ONLINE_MODELS = ("streamvggt", "stream3r", "infinitevggt")
 VIGEO_MODES = ("offline", "online", "chunk")
 VIGEO_MODELS = ("vigeo_offline", "vigeo_online", "vigeo_chunk")
 ALL_MODELS = OFFLINE_MODELS + ONLINE_MODELS + VIGEO_MODELS + ("vigeo",)
@@ -53,14 +53,14 @@ def load_model(model_name: str, checkpoint: str | Path | None = None):
     model_name = model_name.lower()
     checkpoint_path = Path(checkpoint).expanduser().resolve() if checkpoint else None
 
-    if model_name == "streamvggt":
+    if model_name in ("streamvggt", "infinitevggt"):
         from streamvggt.models.streamvggt import StreamVGGT
 
         if checkpoint_path is None:
             checkpoint_path = DEPTH_BENCHMARK_DIR / "checkpoints" / "streamvggt" / "checkpoints.pth"
         if not checkpoint_path.exists():
             raise FileNotFoundError(f"Missing StreamVGGT checkpoint: {checkpoint_path}")
-        model = StreamVGGT()
+        model = StreamVGGT(total_budget=1_200_000) if model_name == "infinitevggt" else StreamVGGT()
         model.load_state_dict(_state_dict_from_checkpoint(checkpoint_path), strict=True)
 
     elif model_name == "vggt":
@@ -258,12 +258,6 @@ def _transform_local_points(points: torch.Tensor, poses: torch.Tensor) -> torch.
     return torch.einsum("ij,shwj->shwi", first_inverse, world)[..., :3]
 
 
-def _resolve_vigeo_num_tokens(images: torch.Tensor, max_tokens: int = 1369, patch_size: int = 14) -> int | None:
-    height, width = images.shape[-2:]
-    input_tokens = max(1, height // patch_size) * max(1, width // patch_size)
-    return None if input_tokens < max_tokens else max_tokens
-
-
 @torch.no_grad()
 def _infer_vigeo(model, images: torch.Tensor, model_name: str, chunk_size: int, total_budget: int) -> ReconstructionPrediction:
     mode = model_name.removeprefix("vigeo_")
@@ -271,7 +265,6 @@ def _infer_vigeo(model, images: torch.Tensor, model_name: str, chunk_size: int, 
         images,
         mode=mode,
         chunk_size=chunk_size,
-        num_tokens=_resolve_vigeo_num_tokens(images),
         total_budget=total_budget,
         resize_output=True,
     )
@@ -294,6 +287,8 @@ def infer_scene(
     target_hw = tuple(scene.depths.shape[-2:])
     if model_name == "streamvggt":
         return _infer_streamvggt(model, scene.images, total_budget=None)
+    if model_name == "infinitevggt":
+        return _infer_streamvggt(model, scene.images, total_budget=total_budget)
     if model_name == "vggt":
         return _infer_vggt(model, scene.images)
     if model_name == "pi3":
