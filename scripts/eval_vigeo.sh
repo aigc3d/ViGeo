@@ -141,7 +141,7 @@ if task_enabled pose; then
 fi
 
 if task_enabled reconstruction; then
-    for mode in offline online chunk; do
+    for mode in offline online; do
         run_reconstruction_eval "$mode"
     done
 fi

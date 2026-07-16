@@ -134,7 +134,7 @@ def load_pose_image_tensor(image_paths, width, device):
 def run_pose_inference(model, args, image_paths, device):
     images_tensor = load_pose_image_tensor(image_paths, args.pose_load_img_size, device)
     infer_kwargs = make_infer_kwargs(args)
-    output = model.infer(images_tensor[0], resize_output=False, **infer_kwargs)
+    output = model.infer(images_tensor[0], num_tokens=None, resize_output=False, **infer_kwargs)
     return c2w_to_pose_rows(output['pose_pred'].float().cpu())
 
 
@@ -152,7 +152,7 @@ def transform_local_points(points: torch.Tensor, poses: torch.Tensor) -> torch.T
 @torch.no_grad()
 def run_reconstruction_inference(model, args, images_tensor):
     infer_kwargs = make_infer_kwargs(args)
-    output = model.infer(images_tensor, resize_output=True, **infer_kwargs)
+    output = model.infer(images_tensor, num_tokens=None, resize_output=True, **infer_kwargs)
     points = output['points_pred'].float()
     poses = output['pose_pred'].float()
     return transform_local_points(points, poses).cpu()
