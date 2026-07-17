@@ -6,7 +6,14 @@
         <a href="https://g-1nonly.github.io/" style="text-decoration: none; color: inherit;">Jingnan Gao</a><sup>*</sup>,
         <a href="https://rm-zhang.github.io/" style="text-decoration: none; color: inherit;">Runmin Zhang</a>,
         <a href="https://lingtengqiu.github.io/" style="text-decoration: none; color: inherit;">Linteng Qiu</a>,
-        et al.
+        <a href="https://scholar.google.com/citations?user=iuJ1buQAAAAJ&amp;hl=en" style="text-decoration: none; color: inherit;">Zhengyi Zhao</a>,
+        <a href="https://prstrive.github.io/" style="text-decoration: none; color: inherit;">Rui Peng</a>,
+        <a href="https://daodaofr.github.io/" style="text-decoration: none; color: inherit;">Yichao Yan</a>,
+        <a href="https://sites.google.com/site/kejieqiujack/home" style="text-decoration: none; color: inherit;">Kejie Qiu</a>,
+        <a href="https://sites.google.com/site/zhusiyucs/home" style="text-decoration: none; color: inherit;">Siyu Zhu</a>,
+        <a href="https://scholar.google.com/citations?user=GHOQKCwAAAAJ&amp;hl=en" style="text-decoration: none; color: inherit;">Zilong Dong</a>,
+        <a href="https://scholar.google.com/citations?user=G35eh30AAAAJ&amp;hl=zh-CN" style="text-decoration: none; color: inherit;">Si-Yuan Cao</a>,
+        <a href="https://scholar.google.com/citations?user=qfAg9nUAAAAJ&amp;hl=en" style="text-decoration: none; color: inherit;">Hui-Liang Shen</a>
         </strong>
     </p>
     <p>
