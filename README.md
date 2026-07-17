@@ -2,8 +2,6 @@
 
 This branch contains the training code for ViGeo and VideoLDCM. Run all commands from the repository root.
 
-Preprocessing instructions are intentionally left out for now and will be added later.
-
 ## Installation
 
 Create the environment and install the dependencies:
@@ -34,10 +32,44 @@ pip install -r docs/requirements.txt
 - `src/model/`: ViGeo model definitions.
 - `src/depth_completion_model/`: VideoLDCM model definitions.
 - `preprocess/`: dataset preprocessing and index-generation scripts.
+- [`preprocess/DATASETS.md`](preprocess/DATASETS.md): dataset downloads, preprocessing, and index-generation commands.
 - `logs/`: default training output directory used by the commands below.
 - `ckpts/`: expected location for pretrained checkpoints referenced by configs.
 - `data/`: expected dataset root in the provided configs.
 - `train_test_split/`: expected split-file root in the provided configs.
+
+## Data Preparation
+
+Follow the [dataset preparation guide](preprocess/DATASETS.md) to:
+
+1. Download and extract the training datasets.
+2. Run the dataset-specific preprocessing scripts.
+3. Generate the training indexes.
+
+All processed datasets must be stored under `data/<dataset-name>/`, and all
+generated indexes must be stored under `train_test_split/`.
+
+## Ray-loss Scale Alignment
+
+The current training code aligns the normalized GT camera translation to the
+predicted point-map scale before constructing the ray supervision target:
+
+```python
+pose_gt_i_ray[:, :3, 3] /= scale_i
+```
+
+The original paper-training code constructed the GT ray map directly from the
+normalized GT pose, without this additional scale alignment. We hypothesize
+that the resulting mismatch between the ray origins and the predicted geometry
+scale may have affected the final model's pose accuracy. This is only a
+hypothesis: we currently do not have the compute resources required to retrain
+the model and verify its impact, and plan to evaluate it when resources become
+available.
+
+For exact reproduction of the paper's original training procedure, the legacy
+ray-target construction is retained as commented code in
+[`src/loss/video_depth_loss.py`](src/loss/video_depth_loss.py). Disable the
+scale-aligned block and restore the adjacent legacy block before training.
 
 ## Training
 
@@ -83,7 +115,3 @@ run_train configs/depth_completion/videoldcm_stage1.py logs/videoldcm_stage1 225
 # VideoLDCM stage 2
 run_train configs/depth_completion/videoldcm_stage2.py logs/videoldcm_stage2 2252
 ```
-
-## Data Preparation
-
-Dataset preprocessing and split generation live under `preprocess/`. The configs currently expect processed datasets under `data/` and split files under `train_test_split/`. Detailed preprocessing commands will be added later.

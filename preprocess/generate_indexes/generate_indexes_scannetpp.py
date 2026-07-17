@@ -12,7 +12,9 @@ def parse_args():
 
 def main():
     args = parse_args()
-    data_path = args.data_path
+    data_path = os.path.join(args.data_path, 'data')
+    if not os.path.isdir(data_path):
+        data_path = args.data_path
     output_path = args.output_path
     scenes = os.listdir(os.path.join(data_path))
     scenes.sort()

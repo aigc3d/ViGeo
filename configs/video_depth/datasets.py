@@ -4,7 +4,6 @@
 # pipeline definitions. The final values are still plain Python dicts.
 
 data_path = 'data/'
-data_path2 = '/mnt/data/yuzhu/dataset/'
 train_test_split_path = 'train_test_split/'
 
 IMAGE_AUGMENTATIONS = ['jittering', 'jpeg_loss', 'blurring', 'shot_noise', 'dof']
@@ -105,8 +104,8 @@ train_datasets = dict(
     synmirrorv2=train_dataset('synmirrorv2', data_path + 'synmirrorv2', 4, 80),
     ase=train_dataset('ase', data_path + 'ase', 10, 50, crop_cfg=WIDE_CROP),
     spring=train_dataset('spring', data_path + 'spring', 16, 80),
-    carlaocc=train_dataset('carlaocc', data_path2 + 'carlaocc', 30, 80),
-    tartanground=train_dataset('tartanground', data_path2 + 'tartanground', 30, 80, split_ext='parquet'),
+    carlaocc=train_dataset('carlaocc', data_path + 'carlaocc', 30, 80),
+    tartanground=train_dataset('tartanground', data_path + 'tartanground', 30, 80, split_ext='parquet'),
     wildrgbd=train_dataset('wildrgbd', data_path + 'wildrgbd', 1, 3, crop_cfg=WIDE_CROP, refine=True),
     waymo=train_dataset('waymo', data_path + 'waymo', 8, 80, refine=True),
     arkitscenes=train_dataset('arkitscenes', data_path + 'arkitscenes', 8, 50, crop_cfg=WIDE_CROP, refine=True),

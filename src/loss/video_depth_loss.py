@@ -94,7 +94,7 @@ class VideoDepthLoss(nn.Module):
 
     @staticmethod
     def _build_gt_geometry(depth_gt_i, intrinsic_gt_i, pose_gt_i, mask_i):
-        """Build GT point map, normalized GT geometry, and GT ray map.
+        """Build the GT point map and normalized GT geometry.
 
         Args:
             depth_gt_i: [S, 1, H, W]
@@ -111,14 +111,7 @@ class VideoDepthLoss(nn.Module):
             points_gt_i.float(), pose_gt_i.float(), mask_i
         )
 
-        ray_gt_i = compute_raymap_from_pose(
-            pose_gt_i_norm.detach(),
-            intrinsic_gt_i.detach(),
-            depth_gt_i.shape[-2],
-            depth_gt_i.shape[-1],
-        )
-
-        return points_gt_i, points_gt_i_norm, pose_gt_i_norm, ray_gt_i
+        return points_gt_i, points_gt_i_norm, pose_gt_i_norm
 
     @staticmethod
     def _build_pred_geometry(points_pred_i, pose_pred_i, mask_i):
@@ -261,7 +254,7 @@ class VideoDepthLoss(nn.Module):
         """
         # Force GT geometry construction to float32 for numerical stability.
         with torch.amp.autocast('cuda', dtype=torch.float32):
-            points_gt_i, points_gt_i_norm, pose_gt_i_norm, ray_gt_i = self._build_gt_geometry(
+            points_gt_i, points_gt_i_norm, pose_gt_i_norm = self._build_gt_geometry(
                 depth_gt_i, intrinsic_gt_i, pose_gt_i, mask_i
             )
 
@@ -272,6 +265,27 @@ class VideoDepthLoss(nn.Module):
         scale_gt_i, scale_i = self._compute_scales(
             points_pred_i, points_gt_i, points_pred_i_norm, points_gt_i_norm, mask_i
         )
+
+        with torch.amp.autocast('cuda', dtype=torch.float32):
+            # Original paper-training behavior, kept for reproducibility:
+            # ray_gt_i = compute_raymap_from_pose(
+            #     pose_gt_i_norm.detach(),
+            #     intrinsic_gt_i.detach(),
+            #     depth_gt_i.shape[-2],
+            #     depth_gt_i.shape[-1],
+            # )
+
+            # scale_i aligns predicted normalized points to normalized GT points.
+            # Ray predictions live in the predicted normalized scale, so express
+            # the GT camera origins in that scale before constructing the rays.
+            pose_gt_i_ray = pose_gt_i_norm.detach().clone()
+            pose_gt_i_ray[:, :3, 3] /= scale_i.detach()
+            ray_gt_i = compute_raymap_from_pose(
+                pose_gt_i_ray,
+                intrinsic_gt_i.detach(),
+                depth_gt_i.shape[-2],
+                depth_gt_i.shape[-1],
+            )
 
         sample_losses = {}
 
