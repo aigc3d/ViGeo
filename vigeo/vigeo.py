@@ -19,6 +19,7 @@ class ViGeo(nn.Module):
     def __init__(
         self,
         encoder: Literal["vits", "vitb", "vitl", "vitg"] = "vitg",
+        with_mask_head: bool = False,
     ):
         super().__init__()
         self.patch_size = 14
@@ -49,6 +50,7 @@ class ViGeo(nn.Module):
         self.camera_head = CameraHead(dim_in=2 * self.pretrained.embed_dim)
         self.normal_head = ConvHead(dim_out=3, **conv_kwargs)
         self.conf_head = ConvHead(dim_out=1, **conv_kwargs)
+        self.mask_head = ConvHead(dim_out=1, **conv_kwargs) if with_mask_head else None
 
         image_mean = torch.tensor([0.485, 0.456, 0.406]).view(1, 3, 1, 1)
         image_std = torch.tensor([0.229, 0.224, 0.225]).view(1, 3, 1, 1)
@@ -77,14 +79,16 @@ class ViGeo(nn.Module):
                 **hf_kwargs,
             )
 
-        model = cls(encoder=encoder)
         state_dict = torch.load(checkpoint_path, map_location="cpu", weights_only=True)
         if isinstance(state_dict, dict):
             state_dict = state_dict.get("state_dict", state_dict.get("model", state_dict))
         state_dict = {
-            key: value for key, value in state_dict.items()
-            if not key.startswith("mask_head.")
+            key.removeprefix("model."): value for key, value in state_dict.items()
         }
+        model = cls(
+            encoder=encoder,
+            with_mask_head=any(key.startswith("mask_head.") for key in state_dict),
+        )
         model.load_state_dict(state_dict, strict=True)
         return model
 
@@ -151,6 +155,7 @@ class ViGeo(nn.Module):
             pose = self.camera_head(out["camera_tokens"])
             normal = self.normal_head(hidden, patch_h, patch_w)
             conf = self.conf_head(hidden, patch_h, patch_w)
+            mask = self.mask_head(hidden, patch_h, patch_w) if self.mask_head is not None else None
 
             if resize_output:
                 def resize_back(tensor: torch.Tensor | None):
@@ -165,6 +170,7 @@ class ViGeo(nn.Module):
                 point_logits = resize_back(point_logits)
                 normal = resize_back(normal)
                 conf = resize_back(conf)
+                mask = resize_back(mask)
 
             out_H, out_W = (orig_H, orig_W) if resize_output else (H, W)
             points, depth = self._remap(point_logits)
@@ -181,6 +187,7 @@ class ViGeo(nn.Module):
             'pose': pose,
             'normal': format_pred(normal),
             'conf': format_pred(conf),
+            'mask': format_pred(mask),
             'new_kv_caches': new_kv_caches,
         }
 
@@ -218,7 +225,8 @@ class ViGeo(nn.Module):
         else:
             raise ValueError(f"Unsupported inference mode: {mode}")
 
-        all_points, all_depths, all_point_logits, all_poses, all_normals, all_confs = [], [], [], [], [], []
+        all_points, all_depths, all_point_logits, all_poses = [], [], [], []
+        all_normals, all_confs, all_masks = [], [], []
 
         for t in range(0, T, step_size):
             end_t = min(t + step_size, T)
@@ -243,12 +251,15 @@ class ViGeo(nn.Module):
                 all_normals.append(output['normal'].cpu())
             if output['conf'] is not None:
                 all_confs.append(output['conf'].cpu())
+            if output['mask'] is not None:
+                all_masks.append(output['mask'].cpu())
 
         depth_pred = torch.cat(all_depths, dim=1)
         point_logits_pred = torch.cat(all_point_logits, dim=1)
         pose_pred = torch.cat(all_poses, dim=1)
         normal_pred = torch.cat(all_normals, dim=1) if all_normals else None
         conf_pred = torch.cat(all_confs, dim=1) if all_confs else None
+        mask_pred = torch.cat(all_masks, dim=1) > 0.5 if all_masks else None
 
         if resize_output:
             focal_length = recover_focal_from_xy(point_logits_pred[:, :, :2])
@@ -263,6 +274,7 @@ class ViGeo(nn.Module):
             'pose_pred': pose_encoding_to_extri(pose_pred),
             'normal_pred': normal_pred.permute(0, 1, 3, 4, 2) if normal_pred is not None else None,
             'conf_pred': conf_pred,
+            'mask_pred': mask_pred,
             'kv_caches': kv_caches,
         }
 

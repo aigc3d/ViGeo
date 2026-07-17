@@ -24,12 +24,9 @@ For training, please refer to the [train branch](https://github.com/aigc3d/ViGeo
 For full benchmark evaluation, please refer to the [benchmark branch](https://github.com/aigc3d/ViGeo/tree/benchmark).
 
 ## To Do List
-
-We have fixed several numerical errors in the paper and submitted an updated version to arXiv. Before the update is reflected on arXiv, please refer to assets/paper.pdf for the correct version.
-
 - [x] Release ViGeo
 
-  A preliminary ViGeo checkpoint has been released. Please note that the current checkpoint was trained with a known issue in the loss implementation, which may cause minor visualization artifacts in camera poses and distant regions. This checkpoint is consistent with the results reported in the paper and can be used to obtain dense geometry estimation results. We are preparing an updated checkpoint with a sky mask head and will release it soon.
+  ViGeo 1.0 reproduces the paper results. ViGeo 1.1 additionally provides a mask head for separating valid scene regions from sky or invalid regions.
 
 - [ ] Release Hugging Face demo
 - [x] Update pose benchmarks
@@ -62,7 +59,8 @@ pip install -r requirements_refine.txt
 
 | Model | Download | Description |
 | :---: | :---: | --- |
-| ViGeo | [HuggingFace](https://huggingface.co/pkqbajng/ViGeo)<br>[ModelScope](https://www.modelscope.cn/models/RunminZhang/ViGeo) | Main visual geometry model for depth, points, normals, poses, and confidence. |
+| ViGeo 1.0 | [HuggingFace](https://huggingface.co/pkqbajng/ViGeo)<br>[ModelScope](https://www.modelscope.cn/models/RunminZhang/ViGeo) | Visual geometry model for depth, points, normals, poses, and confidence. |
+| ViGeo 1.1 | [HuggingFace](https://huggingface.co/pkqbajng/ViGeo1.1) | Updated model with an additional valid-region mask head. |
 | VideoLDCM | [HuggingFace](https://huggingface.co/pkqbajng/VideoLDCM)<br>[ModelScope](https://www.modelscope.cn/models/RunminZhang/VideoLDCM) | Data-refinement model for sparse-depth filtering, Poisson completion, and depth refinement. |
 
 ## Quick Start for ViGeo
@@ -78,7 +76,7 @@ from utils import load_image_sequence
 device = torch.device("cuda")
 image_paths = ["path/to/imageA.png", "path/to/imageB.png", "path/to/imageC.png"]
 images = load_image_sequence(image_paths).to(device)  # [T, 3, H, W], RGB in [0, 1]
-model = ViGeo.from_pretrained("pkqbajng/ViGeo").to(device).eval()
+model = ViGeo.from_pretrained("pkqbajng/ViGeo1.1").to(device).eval()
 
 with torch.inference_mode():
     output = model.infer(images, mode="offline")
@@ -89,9 +87,10 @@ normals = output["normal_pred"]   # [T, H, W, 3], inward normals
 normals_out = -normals            # outward normals for visualization/evaluation
 poses = output["pose_pred"]       # [T, 3, 4], camera-to-world
 conf = output["conf_pred"]        # [T, 1, H, W]
+mask = output["mask_pred"]        # [T, 1, H, W], or None for ViGeo 1.0
 ```
 
-For batched input `[B, T, 3, H, W]`, tensor outputs keep the leading batch dimension.
+`from_pretrained` detects the checkpoint version automatically. For batched input `[B, T, 3, H, W]`, tensor outputs keep the leading batch dimension.
 
 ViGeo uses a right-handed camera coordinate system with `(X, Y, Z) = (right, down, front)`. The raw `normal_pred` output follows the inward normal convention. The demo and normal benchmarks use outward normals for RGB normal-map visualization and evaluation; for example, a fronto-parallel wall facing the camera is visualized/evaluated with normal `(0, 0, 1)`. Please use `normals = -normal_pred` when outward normals are needed.
 
