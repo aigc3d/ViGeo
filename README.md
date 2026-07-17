@@ -58,6 +58,9 @@ predicted point-map scale before constructing the ray supervision target:
 pose_gt_i_ray[:, :3, 3] /= scale_i
 ```
 
+The corrected ray-target construction is implemented in
+[`src/loss/video_depth_loss.py` (lines 278–288)](https://github.com/aigc3d/ViGeo/blob/train/src/loss/video_depth_loss.py#L278-L288).
+
 The original paper-training code constructed the GT ray map directly from the
 normalized GT pose, without this additional scale alignment. We hypothesize
 that the resulting mismatch between the ray origins and the predicted geometry
@@ -67,9 +70,10 @@ the model and verify its impact, and plan to evaluate it when resources become
 available.
 
 For exact reproduction of the paper's original training procedure, the legacy
-ray-target construction is retained as commented code in
-[`src/loss/video_depth_loss.py`](src/loss/video_depth_loss.py). Disable the
-scale-aligned block and restore the adjacent legacy block before training.
+ray-target construction is retained at
+[`src/loss/video_depth_loss.py` (lines 270–276)](https://github.com/aigc3d/ViGeo/blob/train/src/loss/video_depth_loss.py#L270-L276).
+Restore that commented block and disable the corrected block at lines 278–288
+before training.
 
 ## Training
 
