@@ -70,7 +70,7 @@ pip install -r requirements_refine.txt
 | ViGeo 1.1 | [HuggingFace](https://huggingface.co/pkqbajng/ViGeo1.1) | Updated model with an additional valid-region mask head. |
 | VideoLDCM | [HuggingFace](https://huggingface.co/pkqbajng/VideoLDCM)<br>[ModelScope](https://www.modelscope.cn/models/RunminZhang/VideoLDCM) | Data-refinement model for sparse-depth filtering, Poisson completion, and depth refinement. |
 
-> **Scale alignment note.** The released ViGeo checkpoints follow the paper training setup, where GT camera translation was not scale-aligned before constructing ray supervision. Its possible impact on pose accuracy is currently only a hypothesis, which we plan to verify when resources permit; see the [corrected implementation](https://github.com/aigc3d/ViGeo/blob/88cb0d3377bf09788c5bd9cd4055a856675491c7/src/loss/video_depth_loss.py#L278-L288).
+> **Scale alignment note.** The released ViGeo checkpoints follow the paper training setup, where GT camera translation was not scale-aligned before constructing ray supervision. Its possible impact on pose accuracy is currently only a hypothesis, which we plan to verify when resources permit; see the [detailed training note](https://github.com/aigc3d/ViGeo/tree/train#ray-loss-scale-alignment).
 
 ## Quick Start for ViGeo
 
