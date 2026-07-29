@@ -251,9 +251,11 @@ ViGeo is licensed under the Apache License, Version 2.0. See `LICENSE` for detai
   journal={arXiv:2605.30060},
   year={2026}
 }
-```bibtex
-If you find the depth refinement component useful for your project, please also consider citing:
 ```
+
+If you find the depth refinement component useful for your project, please also consider citing:
+
+```bibtex
 @inproceedings{yu2026ldcm,
   title={Large Depth Completion Model from Sparse Observations},
   author={Yu, Zhu and Zhao, Zhengyi and Zhang, Runmin and Qiu, Lingteng and Qiu, Kejie
