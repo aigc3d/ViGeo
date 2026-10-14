@@ -35,7 +35,7 @@ For full benchmark evaluation, please refer to the [benchmark branch](https://gi
 
 | Resolution | Before (s) | After (s) | Speedup | Avg. mask diff. |
 | --- | ---: | ---: | ---: | ---: |
-| 518 × 388 | 3.5954 | 0.1878 | **19.14×** | **0.175** |
+| 518 × 388 | 3.5954 | 0.1878 | **19.14×** | **0.175px / per image** |
 
 ## To Do List
 - [x] Release ViGeo
