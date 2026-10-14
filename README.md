@@ -217,12 +217,13 @@ with torch.inference_mode():
         intrinsics=intrinsic.unsqueeze(0).expand(S, -1, -1),
     )  # [S, H, W, 3]
 
+    valid_mask = (moge_mask & (sparse_depth > 0.0001)).squeeze(1) # [S, H, W]
     # Removes wrong sparse-depth points with multi-scale geometry consistency.
     filtered_mask = multi_scale_filter_depth(
-        moge_out["points"],
-        points_gt,
-        moge_mask & (sparse_depth > 0.0001),
-        focal=focal.expand(S),
+        moge_out["points"], # [S, H, W, 3]
+        points_gt, # [S, H, W, 3]
+        valid_mask, # [S, H, W]
+        focal=focal.expand(S), # [S]
     )  # [S, H, W]
     prior = sparse_depth * filtered_mask.unsqueeze(1).float()
 
