@@ -30,6 +30,13 @@ ViGeo supports both `offline` and `online` inference. Use `offline` when the ful
 For training, please refer to the [train branch](https://github.com/aigc3d/ViGeo/tree/train).
 For full benchmark evaluation, please refer to the [benchmark branch](https://github.com/aigc3d/ViGeo/tree/benchmark).
 
+## News
+- **[2026-10-14]** Accelerated VideoLDCM's multi-scale depth filtering by **19.14×**, based on mean per-image latency across 120 images from Waymo, ARKitScenes, and ScanNet++ on NVIDIA H20-3e.
+
+| Resolution | Before (s) | After (s) | Speedup | Avg. mask diff. |
+| --- | ---: | ---: | ---: | ---: |
+| 518 × 388 | 3.5954 | 0.1878 | **19.14×** | **0.175** |
+
 ## To Do List
 - [x] Release ViGeo
 
