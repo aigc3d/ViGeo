@@ -48,7 +48,8 @@ For full benchmark evaluation, please refer to the [benchmark branch](https://gi
 | ScanNet++ | 0.108 → **0.089** | 2.80 → **1.83** |
 | Synthetic | 0.372 → **0.274** | 4.13 → **2.66** |
 
-### Method and benchmark details
+<details>
+<summary>Method and benchmark details</summary>
 
 Building on Eq. (4) in the [paper](assets/paper.pdf), we retain the paper's
 notation: $\mathbf{D}^{\mathrm{prior}}$ denotes the dense coarse depth prior,
@@ -60,34 +61,31 @@ $\bar{\mathbf{D}}^{\mathrm{mono}}=a\mathbf{D}^{\mathrm{mono}}+b$ denote the
 affine-aligned monocular prediction. At each pyramid level, the solver minimizes
 the following robust objective:
 
-$$
-\min_{\mathbf{D}^{\mathrm{prior}}>0}
-\left[\sum_{(p,q)\in\mathcal{E}} w_{pq}
-\left(\log\mathbf{D}^{\mathrm{prior}}_q-\log\mathbf{D}^{\mathrm{prior}}_p-g_{pq}\right)^2
-+\lambda\sum_{p\in\mathcal{M}^{\mathrm{valid}}}\rho_p
-\left(\log\mathbf{D}^{\mathrm{prior}}_p-\log\tilde{\mathbf{D}}_p\right)^2\right]
-$$
+<div align="center">
+
+$\displaystyle \min_{\mathbf{D}^{\mathrm{prior}}>0}\left[\sum_{(p,q)\in\mathcal{E}}w_{pq}\left(\log\mathbf{D}^{\mathrm{prior}}_q-\log\mathbf{D}^{\mathrm{prior}}_p-g_{pq}\right)^2+\lambda\sum_{p\in\mathcal{M}^{\mathrm{valid}}}\rho_p\left(\log\mathbf{D}^{\mathrm{prior}}_p-\log\tilde{\mathbf{D}}_p\right)^2\right]$
+
+</div>
 
 Here, $\mathcal{E}$ is the set of horizontally and vertically adjacent pixel
 pairs, and $g_{pq}$ is the clipped log-depth difference induced by the aligned
 monocular prediction:
 
-$$
-g_{pq}=\mathrm{clip}\left(
-\log\bar{\mathbf{D}}^{\mathrm{mono}}_q-\log\bar{\mathbf{D}}^{\mathrm{mono}}_p,-3,3
-\right).
-$$
+<div align="center">
+
+$\displaystyle g_{pq}=\mathrm{clip}\left(\log\bar{\mathbf{D}}^{\mathrm{mono}}_q-\log\bar{\mathbf{D}}^{\mathrm{mono}}_p,-3,3\right).$
+
+</div>
 
 Unlike the compact formulation in Eq. (4), the updated implementation evaluates
 the sparse-data term in log-depth space. It also introduces the following
 edge-aware weights:
 
-$$
-w_{pq}=\max\left(10^{-4},\min(c_p,c_q)\max\left(0.01,
-\exp\left[-\frac{
-|\log\bar{\mathbf{D}}^{\mathrm{mono}}_q-\log\bar{\mathbf{D}}^{\mathrm{mono}}_p|
-}{0.01}\right]\right)\right)
-$$
+<div align="center">
+
+$\displaystyle w_{pq}=\max\left(10^{-4},\min(c_p,c_q)\max\left(0.01,\exp\left[-\frac{|\log\bar{\mathbf{D}}^{\mathrm{mono}}_q-\log\bar{\mathbf{D}}^{\mathrm{mono}}_p|}{0.01}\right]\right)\right)$
+
+</div>
 
 Here, $c$ denotes the optional confidence and defaults to one when confidence is
 not provided. For directional confidence, the horizontal or vertical channel is
@@ -100,10 +98,11 @@ An adaptive local window estimates the neighboring correction mean $\mu_p$ and
 standard deviation $\sigma_p$, excluding the center observation itself. The
 observation reliability is then
 
-$$
-\rho_p=\max\left(0.05,
-\frac{1}{1+\left(\frac{r_p-\mu_p}{\max(0.15,2\sigma_p)}\right)^2}\right).
-$$
+<div align="center">
+
+$\displaystyle \rho_p=\max\left(0.05,\frac{1}{1+\left(\frac{r_p-\mu_p}{\max(0.15,2\sigma_p)}\right)^2}\right).$
+
+</div>
 
 The window size adapts to the per-image sparse-observation density and targets
 approximately 12 usable observations. If fewer than three usable neighbors are
@@ -117,6 +116,8 @@ resizing it to the input resolution.
 **Acknowledgment.** We thank the authors of
 [MetricScenes](https://github.com/MetricScenes/MetricScenes), whose edge-aware
 Poisson completion implementation inspired our edge-weighting design.
+
+</details>
 
 - **[2026-10-14]** Accelerated VideoLDCM's multi-scale depth filtering by **19.14×**, based on mean per-image latency across 120 images from Waymo, ARKitScenes, and ScanNet++ on NVIDIA H20-3e.
 
