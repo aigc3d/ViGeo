@@ -51,6 +51,7 @@ class videoldcm(nn.Module):
     @torch.no_grad()
     def prepare_input(self, image, prior):
         b, s = image.shape[:2]
+        prior = prior.float()
         image_input = image.reshape(b * s, *image.shape[2:]).half()
 
         moge_result = self.moge.infer(image_input)
@@ -59,7 +60,7 @@ class videoldcm(nn.Module):
         mono_depth = torch.where(mask, mono_depth, 0.0)
 
         device_type = image.device.type
-        with torch.autocast(device_type=device_type, dtype=torch.float32, enabled=device_type == "cuda"):
+        with torch.autocast(device_type=device_type, enabled=False):
             prior_mask = torch.isfinite(prior) & (prior > 0)
             prior = torch.where(prior_mask, prior, torch.zeros_like(prior))
             medians = median(prior)
