@@ -32,9 +32,7 @@ For full benchmark evaluation, please refer to the [benchmark branch](https://gi
 
 ## News
 
-- **[2026-10-15]** Updated the **Poisson reconstruction** stage used to construct VideoLDCM's coarse depth prior, adding robust sparse-observation weighting and edge-aware monocular guidance. The update improves both RMSE and AbsRel on the KITTI selected validation set, ScanNet++, and synthetic cases with analytical ground truth. The updated solver also runs **4.34–6.71× faster** across the tested resolutions on NVIDIA H20-3e.
-
-**Runtime (NVIDIA H20-3e)**
+- **[2026-10-15]** Updated the **Poisson reconstruction** stage used to construct VideoLDCM's coarse depth prior, adding robust sparse-observation weighting and edge-aware monocular guidance. The update improves both RMSE and AbsRel on the KITTI selected validation set, ScanNet++, and synthetic cases with analytical ground truth. The updated solver also runs **4.34–6.71× faster** across the tested resolutions on NVIDIA H20.
 
 | Resolution (W × H) | Inference time (ms) | Speedup |
 | --- | ---: | ---: |
@@ -54,7 +52,7 @@ For full benchmark evaluation, please refer to the [benchmark branch](https://gi
 
 See the [method and implementation details](docs/poisson_completion.md).
 
-- **[2026-10-14]** Accelerated VideoLDCM's multi-scale depth filtering by **19.14×**, based on mean per-image latency across 120 images from Waymo, ARKitScenes, and ScanNet++ on NVIDIA H20-3e.
+- **[2026-10-14]** Accelerated VideoLDCM's multi-scale depth filtering by **19.14×**, based on mean per-image latency across 120 images from Waymo, ARKitScenes, and ScanNet++ on NVIDIA H20.
 
 | Resolution | Inference time (s) | Speedup | Avg. mask diff. |
 | --- | ---: | ---: | ---: |
