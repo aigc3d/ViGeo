@@ -61,7 +61,7 @@ $\bar{\mathbf{D}}^{\mathrm{mono}}=a\mathbf{D}^{\mathrm{mono}}+b$ denote the
 affine-aligned monocular prediction. At each pyramid level, the solver minimizes
 the following robust objective:
 
-$$
+```math
 \begin{aligned}
 \min_{\mathbf{D}^{\mathrm{prior}}>0}
 &\Biggl[\sum_{(p,q)\in\mathcal{E}} w_{pq}
@@ -70,30 +70,30 @@ $$
 &\quad+\lambda\sum_{p\in\mathcal{M}^{\mathrm{valid}}}\rho_p
 \left(\log\mathbf{D}^{\mathrm{prior}}_p-\log\tilde{\mathbf{D}}_p\right)^2\Biggr],
 \end{aligned}
-$$
+```
 
 Here, $\mathcal{E}$ is the set of horizontally and vertically adjacent pixel
 pairs, and $g_{pq}$ is the clipped log-depth difference induced by the aligned
 monocular prediction:
 
-$$
+```math
 g_{pq}=\operatorname{clip}\!\left(
 \log\bar{\mathbf{D}}^{\mathrm{mono}}_q-\log\bar{\mathbf{D}}^{\mathrm{mono}}_p,-3,3
 \right).
-$$
+```
 
 Unlike the compact formulation in Eq. (4), the updated implementation evaluates
 the sparse-data term in log-depth space. It also introduces the following
 edge-aware weights:
 
-$$
+```math
 \begin{aligned}
 w_{pq}=\max\Bigl(&10^{-4},\;\min(c_p,c_q)\max\Bigl(0.01,\\[6pt]
 &\exp\!\Bigl[-\dfrac{
 |\log\bar{\mathbf{D}}^{\mathrm{mono}}_q-\log\bar{\mathbf{D}}^{\mathrm{mono}}_p|
 }{0.01}\Bigr]\Bigr)\Bigr),
 \end{aligned}
-$$
+```
 
 Here, $c$ denotes the optional confidence and defaults to one when confidence is
 not provided. For directional confidence, the horizontal or vertical channel is
@@ -106,10 +106,10 @@ An adaptive local window estimates the neighboring correction mean $\mu_p$ and
 standard deviation $\sigma_p$, excluding the center observation itself. The
 observation reliability is then
 
-$$
+```math
 \rho_p=\max\!\left(0.05,\;
 \dfrac{1}{1+\left(\dfrac{r_p-\mu_p}{\max(0.15,2\sigma_p)}\right)^2}\right).
-$$
+```
 
 The window size adapts to the per-image sparse-observation density and targets
 approximately 12 usable observations. If fewer than three usable neighbors are
