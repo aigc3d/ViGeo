@@ -15,7 +15,14 @@ dependencies = [
     "huggingface-hub>=0.23",
     "numpy>=1.23",
     "pillow>=9.0",
+    "ninja>=1.11",
 ]
+
+[project.optional-dependencies]
+poisson-acceleration = []
 
 [tool.setuptools.packages.find]
 include = ["vigeo*", "videoldcm*", "utils*"]
+
+[tool.setuptools.package-data]
+"videoldcm.poisson_completion" = ["_native.cpp", "_native.cu"]

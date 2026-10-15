@@ -31,11 +31,106 @@ For training, please refer to the [train branch](https://github.com/aigc3d/ViGeo
 For full benchmark evaluation, please refer to the [benchmark branch](https://github.com/aigc3d/ViGeo/tree/benchmark).
 
 ## News
+
+- **[2026-10-15]** Updated the **Poisson reconstruction** stage used to construct VideoLDCM's coarse depth prior, adding robust sparse-observation weighting and edge-aware monocular guidance. The update improves both RMSE and AbsRel on the KITTI selected validation set, ScanNet++, and synthetic cases with analytical ground truth. The updated solver also runs **4.34–6.71× faster** across the tested resolutions on NVIDIA H20-3e.
+
+| Resolution (W × H) | Inference time (ms) | Speedup |
+| --- | ---: | ---: |
+| 256 × 192 | 27.23 → 6.27 | **4.34×** |
+| 512 × 384 | 41.07 → 9.21 | **4.46×** |
+| 518 × 345 | 62.48 → 10.88 | **5.74×** |
+| 518 × 388 | 54.11 → 10.32 | **5.24×** |
+| 1216 × 352 | 176.30 → 26.29 | **6.71×** |
+
+| Dataset | RMSE (m) | AbsRel (%) |
+| --- | ---: | ---: |
+| KITTI | 2.294 → **2.205** | 3.91 → **3.65** |
+| ScanNet++ | 0.108 → **0.089** | 2.80 → **1.83** |
+| Synthetic | 0.372 → **0.274** | 4.13 → **2.66** |
+
+<details>
+<summary>Method and benchmark details</summary>
+
+Building on Eq. (4) in the [paper](assets/paper.pdf), we retain the paper's
+notation: $\mathbf{D}^{\mathrm{prior}}$ denotes the dense coarse depth prior,
+$\mathbf{D}^{\mathrm{mono}}$ the initial monocular relative depth prediction,
+$\tilde{\mathbf{D}}$ the filtered sparse depth, and
+$\mathcal{M}^{\mathrm{valid}}$ the set of valid sparse observations.
+For the implementation below, let
+$\bar{\mathbf{D}}^{\mathrm{mono}}=a\mathbf{D}^{\mathrm{mono}}+b$ denote the
+affine-aligned monocular prediction. At each pyramid level, the solver minimizes
+the following robust objective:
+
+$$
+\begin{aligned}
+\min_{\mathbf{D}^{\mathrm{prior}}>0}
+&\Biggl[\sum_{(p,q)\in\mathcal{E}} w_{pq}
+\left(\log\mathbf{D}^{\mathrm{prior}}_q-\log\mathbf{D}^{\mathrm{prior}}_p-g_{pq}\right)^2
+\\[6pt]
+&\quad+\lambda\sum_{p\in\mathcal{M}^{\mathrm{valid}}}\rho_p
+\left(\log\mathbf{D}^{\mathrm{prior}}_p-\log\tilde{\mathbf{D}}_p\right)^2\Biggr],
+\end{aligned}
+$$
+
+Here, $\mathcal{E}$ is the set of horizontally and vertically adjacent pixel
+pairs, and $g_{pq}$ is the clipped log-depth difference induced by the aligned
+monocular prediction:
+
+$$
+g_{pq}=\operatorname{clip}\!\left(
+\log\bar{\mathbf{D}}^{\mathrm{mono}}_q-\log\bar{\mathbf{D}}^{\mathrm{mono}}_p,-3,3
+\right).
+$$
+
+Unlike the compact formulation in Eq. (4), the updated implementation evaluates
+the sparse-data term in log-depth space. It also introduces the following
+edge-aware weights:
+
+$$
+\begin{aligned}
+w_{pq}=\max\Bigl(&10^{-4},\;\min(c_p,c_q)\max\Bigl(0.01,\\[6pt]
+&\exp\!\Bigl[-\dfrac{
+|\log\bar{\mathbf{D}}^{\mathrm{mono}}_q-\log\bar{\mathbf{D}}^{\mathrm{mono}}_p|
+}{0.01}\Bigr]\Bigr)\Bigr),
+\end{aligned}
+$$
+
+Here, $c$ denotes the optional confidence and defaults to one when confidence is
+not provided. For directional confidence, the horizontal or vertical channel is
+used for the corresponding edge. Consequently, large monocular depth
+discontinuities weaken the coupling across likely object boundaries.
+
+For each usable sparse observation, define
+$r_p=\log\tilde{\mathbf{D}}_p-\log\bar{\mathbf{D}}^{\mathrm{mono}}_p$.
+An adaptive local window estimates the neighboring correction mean $\mu_p$ and
+standard deviation $\sigma_p$, excluding the center observation itself. The
+observation reliability is then
+
+$$
+\rho_p=\max\!\left(0.05,\;
+\dfrac{1}{1+\left(\dfrac{r_p-\mu_p}{\max(0.15,2\sigma_p)}\right)^2}\right).
+$$
+
+The window size adapts to the per-image sparse-observation density and targets
+approximately 12 usable observations. If fewer than three usable neighbors are
+available, the reliability remains one. These reliability weights are computed
+once, without a learned module or an outer robust-optimization loop. At coarser
+pyramid levels, sparse depths are pooled using the reliability weights, and
+reliability is averaged over occupied pixels. A conjugate-gradient solver then
+proceeds from coarse to fine before exponentiating the log-depth solution and
+resizing it to the input resolution.
+
+**Acknowledgment.** We thank the authors of
+[MetricScenes](https://github.com/MetricScenes/MetricScenes), whose edge-aware
+Poisson completion implementation inspired our edge-weighting design.
+
+</details>
+
 - **[2026-10-14]** Accelerated VideoLDCM's multi-scale depth filtering by **19.14×**, based on mean per-image latency across 120 images from Waymo, ARKitScenes, and ScanNet++ on NVIDIA H20-3e.
 
-| Resolution | Before (s) | After (s) | Speedup | Avg. mask diff. |
-| --- | ---: | ---: | ---: | ---: |
-| 518 × 388 | 3.5954 | 0.1878 | **19.14×** | **0.175px / per image** |
+| Resolution | Inference time (s) | Speedup | Avg. mask diff. |
+| --- | ---: | ---: | ---: |
+| 518 × 388 | 3.595 → 0.188 | **19.14×** | **0.175px / image** |
 
 ## To Do List
 - [x] Release ViGeo
@@ -68,6 +163,8 @@ The lightweight inference package does not require `utils3d`. For the optional V
 pip install xformers==0.0.31 --index-url https://download.pytorch.org/whl/cu126
 pip install -r requirements_refine.txt
 ```
+
+Poisson completion can also be imported on its own, without the refinement model dependencies. The standard installation includes Ninja, and available CUDA acceleration is selected automatically. Native reductions build on first use when a CUDA compiler is available; otherwise the solver keeps the Triton/CUDA Graph path, or uses PyTorch if Triton is unavailable.
 
 ## Pretrained Models
 
