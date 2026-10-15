@@ -3,4 +3,5 @@ opencv-python>=4.8
 scipy>=1.10
 huggingface-hub>=0.23
 requests>=2.31
+ninja>=1.11
 git+https://github.com/EasternJournalist/utils3d.git@3fab839f0be9931dac7c8488eb0e1600c236e183
